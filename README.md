@@ -161,8 +161,6 @@ Add Internet permission to the Android Manifest:
 
 ## 📁 Updated / Added Files
 
-> **Fill this section with the exact files modified or created during development.**
-
 -
 -
 -
