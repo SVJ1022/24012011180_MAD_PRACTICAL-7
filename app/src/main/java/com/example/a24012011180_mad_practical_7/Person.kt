@@ -19,7 +19,7 @@ class Person(var id:String,
         name = profileJson.getString("name")
         address = profileJson.getString("address")
         val locationJson = profileJson.getJSONObject("location")
-        latitude = locationJson.getDouble("latitude")
-        longitude = locationJson.getDouble("longitude")
+        latitude = locationJson.getDouble("lat")
+        longitude = locationJson.getDouble("long")
     }
 }

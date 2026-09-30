@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.card.MaterialCardView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -34,48 +35,62 @@ class MainActivity : AppCompatActivity() {
             insets
         }
 
-//        val arrayList = arrayOf(
-//            Contact("SVJ1","7879143203"),
-//            Contact("SVJ2","79872754046"),
-//            Contact("SVJ3","7879166543")
-//        )
-//
         val rv = findViewById<RecyclerView>(R.id.rv_contact)
-//        rv.adapter = ContactAdapter(arrayList)
+        db = DatabaseHelper(this)
+
+        personRecyleAdapter = PersonAdapter(personList,db)
+        rv.adapter = personRecyleAdapter
+
+        personList.addAll(db.getAllPersons())
+        personRecyleAdapter.notifyDataSetChanged()
+
         findViewById<FloatingActionButton>(R.id.refreshbtn).setOnClickListener {
             networkDb()
         }
+
     }
 
     val TAG = "MainActivity"
-    private fun getPersonData(data: String){
-//        Log.i(TAG, "getPersonData: $data")
-        val size = personList.size
-        personList.clear()
-        personRecyleAdapter.notifyItemRangeRemoved(0,size)
+    private fun getPersonData(data: String) {
 
         try {
+
             val jsonArray = JSONArray(data)
-            for(i in 0 until jsonArray.length()){
+
+            for (i in 0 until jsonArray.length()) {
+
                 val jsonObject = jsonArray[i] as JSONObject
                 val person = Person(jsonObject)
-                personList.add(person)
-                try {
-                    if(db.getPerson(person.id) != null){
-                        db.updatePerson(person)
-                    } else {
-                        db.insertContact(person)
-                    }
-                } catch (e: Exception){
-                    e.printStackTrace()
+
+                // Only add if contact does not already exist
+                if (db.getPerson(person.id) == null) {
+                    db.insertContact(person)
                 }
             }
+
+            // Load the latest data from SQLite
+            personList.clear()
+            personList.addAll(db.getAllPersons())
+
+            // Refresh RecyclerView
+            personRecyleAdapter.notifyDataSetChanged()
+
         } catch (e: JSONException) {
             e.printStackTrace()
         }
     }
 
+    override fun onResume() {
+        super.onResume()
 
+        if (::db.isInitialized && ::personRecyleAdapter.isInitialized) {
+
+            personList.clear()
+            personList.addAll(db.getAllPersons())
+
+            personRecyleAdapter.notifyDataSetChanged()
+        }
+    }
     fun networkDb(){
         CoroutineScope(Dispatchers.IO).launch {
             try{
